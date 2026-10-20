@@ -71,7 +71,7 @@
         </div>
     </div>
 
-    <audio id="audioEngine" src="https://soundhelix.com" loop preload="auto"></audio>
+    <audio id="audioEngine" src="When You Say Nothing At All.m4a" loop preload="auto"></audio>
 
     <script>
         const triggerNo = document.getElementById('triggerNo');
@@ -117,7 +117,7 @@ Happy sweet seventeen, pacar kecilku, calon masa depanku, my whole world. Kamu c
         function executeTypewriter(idx) {
             if (idx < masterSpeech.length) {
                 const char = masterSpeech.charAt(idx); typedOutput.innerHTML += char;
-                let delay = 30;
+                let delay = 80;
                 if (char === '.' || char === '?') delay = 400;
                 if (char === ',') delay = 150;
                 const box = document.querySelector('.narrative-box'); box.scrollTop = box.scrollHeight;
