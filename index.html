@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property of Mine.</title>
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #070708;
+            --card-surface: rgba(18, 18, 22, 0.45);
+            --accent-crimson: #ff1e56;
+            --accent-glow: rgba(255, 30, 86, 0.45);
+            --text-pure: #ffffff;
+            --text-secondary: #9aa0a6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg-main); color: var(--text-pure); font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;
+        }
+        body::before {
+            content: ''; position: absolute; width: 350px; height: 350px; z-index: 0; opacity: 0.6; pointer-events: none;
+            background: radial-gradient(circle, var(--accent-glow) 0%, rgba(0,0,0,0) 70%); top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .app-container {
+            width: 90%; max-width: 580px; padding: 3rem 2rem; border-radius: 24px; background: var(--card-surface);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 30, 86, 0.12);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8); text-align: center; z-index: 10; position: relative; transition: opacity 0.4s;
+        }
+        h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: -0.03em; }
+        .highlight { color: var(--accent-crimson); text-shadow: 0 0 20px rgba(255, 30, 86, 0.5); font-style: italic; }
+        p.subtitle { color: var(--text-secondary); font-size: 1.05rem; line-height: 1.6; margin-bottom: 3rem; font-weight: 300; }
+        .action-wrapper { display: flex; justify-content: center; align-items: center; gap: 1.5rem; min-height: 70px; position: relative; }
+        .btn { padding: 0.9rem 2.8rem; font-size: 1rem; font-weight: 600; border-radius: 14px; cursor: pointer; border: none; transition: all 0.2s; outline: none; }
+        .btn-yes { background-color: var(--accent-crimson); color: var(--text-pure); box-shadow: 0 8px 24px rgba(255, 30, 86, 0.3); }
+        .btn-yes:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(255, 30, 86, 0.5); }
+        .btn-no { background-color: rgba(255, 255, 255, 0.03); color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.08); z-index: 99; }
+        .narrative-box { text-align: left; max-height: 60vh; overflow-y: auto; padding-right: 8px; }
+        .narrative-box::-webkit-scrollbar { width: 4px; }
+        .narrative-box::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        .narrative-text { font-size: 1.1rem; line-height: 1.9; color: #e3e3e6; text-align: justify; white-space: pre-line; }
+        .caret { display: inline-block; width: 2px; height: 1.1rem; background-color: var(--accent-crimson); margin-left: 3px; vertical-align: middle; animation: pulse 0.9s infinite; }
+        .hidden { display: none !important; opacity: 0; }
+        @keyframes pulse { 50% { opacity: 0; } }
+        @media (max-width: 480px) {
+            .app-container { padding: 2rem 1.5rem; } h1 { font-size: 1.75rem; } p.subtitle { font-size: 0.95rem; margin-bottom: 2rem; }
+            .action-wrapper { flex-direction: column; gap: 1rem; } .btn { width: 100%; } .btn-no { position: absolute; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 01: GATE -->
+    <div id="stageGate" class="app-container">
+        <h1>Apakah kamu milik <span class="highlight">aku</span> sepenuhnya?</h1>
+        <p class="subtitle">Gak ada pilihan lain. Jawab dengan jujur atau kamu gak akan bisa akses halaman malam ini.</p>
+        <div class="action-wrapper" id="actionField">
+            <button id="triggerYes" class="btn btn-yes">Iya</button>
+            <button id="triggerNo" class="btn btn-no">Gak</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 02: NARRATIVE -->
+    <div id="stageNarrative" class="app-container hidden">
+        <h1 style="margin-bottom: 2rem;">Sweet Seventeen, <span class="highlight">Mine.</span></h1>
+        <div class="narrative-box">
+            <p id="typedOutput" class="narrative-text"></p><span id="caretIndicator" class="caret"></span>
+        </div>
+    </div>
+
+    <audio id="audioEngine" src="https://soundhelix.com" loop preload="auto"></audio>
+
+    <script>
+        const triggerNo = document.getElementById('triggerNo');
+        const triggerYes = document.getElementById('triggerYes');
+        const stageGate = document.getElementById('stageGate');
+        const stageNarrative = document.getElementById('stageNarrative');
+        const typedOutput = document.getElementById('typedOutput');
+        const caretIndicator = document.getElementById('caretIndicator');
+        const audioEngine = document.getElementById('audioEngine');
+        const actionField = document.getElementById('actionField');
+
+        const masterSpeech = `Selamat ulang tahun yang ke-17, manisku, rara nadira sayang. ✨ Akhirnya hari ini kamu resmi masuk usia dewasa. Tapi kamu harus tahu satu hal: bertambahnya umur kamu jadi 17 tahun itu berarti tanda kalau kamu udah sepenuhnya jadi hak milik aku, dan aku bakal makin posesif buat jagain kamu. Gak akan aku biarin ada mata lain yang berani ngelirik kamu, karena fokus dan perhatian kamu itu cuma boleh tertuju ke aku seorang. Paham, kan?
+
+Kalau kamu nanya apa yang bakal aku lakuin kalau aku masih selalu sama kamu sampai kita menua bareng dan udah sah nanti? Jawabannya simpel: aku bakal jadi orang paling nakal sekaligus paling agresif buat manjain kamu. Aku bakal 'balas dendam' atas semua waktu tunggu kita selama ini. Jangan harap kamu bisa jauh-jauh dari aku, karena aku bakal pastiin gak ada jarak satu senti pun di antara kita. Kamu bakal sering aku 'culik' ke kamar, aku kunci di dalam pelukan erat dari belakang, dan aku bisikin di telinga kamu kalau kamu gak boleh ke mana-mana hari itu. Setiap malam, siap-siap aja aku 'makan' lewat ciuman tanpa henti di seluruh muka dan bibir manis kamu sampai kamu lemas dan gak berdaya di bawah aku. Tangan aku bakal punya akses VIP penuh buat menjelajahi dan menyentuh kamu kapan pun aku mau, bikin kamu merinding sampai gigit bibir sendiri, dan membuat kamu ketagihan sama semua sentuhan aku.
+
+Bahkan pas kita udah serumah nanti, tiap pagi pas kamu baru bangun dengan muka bantalmu yang gemesin itu, aku gak akan langsung biarin kamu turun dari kasur. Aku bakal narik kamu balik ke dalam selimut, meluk pinggang kamu erat-erat, dan mulai ciumin leher sama bahu kamu sampai kamu geli. Seluruh tubuh kamu nanti bakal jadi zona bermain favorit aku tiap hari, dan kamu gak punya pilihan selain pasrah aku manja-manjain sampai pagi lagi. Jadi, mending kamu siapin mental dan kuatin jantung kamu dari sekarang buat ngadepin kenakalan aku yang makin berani ke depannya. 
+
+Happy sweet seventeen, pacar kecilku, calon masa depanku, my whole world. Kamu cuma punya aku sekarang, dan aku sayang banget sama kamu. 😏💋🎉`;
+
+        function executeEvasion() {
+            const fieldRect = actionField.getBoundingClientRect();
+            const noRect = triggerNo.getBoundingClientRect();
+            const margin = 20;
+            const rangeX = fieldRect.width - noRect.width - margin;
+            const rangeY = fieldRect.height - noRect.height - margin;
+            const coordX = Math.max(margin, Math.floor(Math.random() * rangeX));
+            const coordY = Math.max(margin, Math.floor(Math.random() * rangeY)) - (window.innerWidth <= 480 ? 60 : 0);
+            triggerNo.style.position = 'absolute'; triggerNo.style.left = `${coordX}px`; triggerNo.style.top = `${coordY}px`;
+        }
+
+        triggerNo.addEventListener('mouseenter', executeEvasion);
+        triggerNo.addEventListener('click', (e) => { e.preventDefault(); executeEvasion(); });
+        triggerNo.addEventListener('touchstart', (e) => { e.preventDefault(); executeEvasion(); });
+
+        triggerYes.addEventListener('click', () => {
+            audioEngine.play().catch(err => console.warn(err));
+            stageGate.style.opacity = '0';
+            setTimeout(() => {
+                stageGate.classList.add('hidden'); stageNarrative.classList.remove('hidden'); executeTypewriter(0);
+            }, 400);
+        });
+
+        function executeTypewriter(idx) {
+            if (idx < masterSpeech.length) {
+                const char = masterSpeech.charAt(idx); typedOutput.innerHTML += char;
+                let delay = 30;
+                if (char === '.' || char === '?') delay = 400;
+                if (char === ',') delay = 150;
+                const box = document.querySelector('.narrative-box'); box.scrollTop = box.scrollHeight;
+                setTimeout(() => executeTypewriter(idx + 1), delay);
+            } else {
+                caretIndicator.style.animation = 'none'; caretIndicator.style.opacity = '0';
+            }
+        }
+    </script>
+</body>
+</html>
